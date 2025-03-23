@@ -1,0 +1,22 @@
+# Sample terraform.tfvars file
+# Copy to terraform.tfvars and customize as needed
+
+# AWS region (Free Tier eligible)
+aws_region = "us-east-1"
+
+# EC2 instance name
+instance_name = "spring-scheduling-system"
+
+# EC2 instance type (Free Tier eligible)
+instance_type = "t2.micro"
+
+# Key pair name for SSH access
+# IMPORTANT: This key pair must exist in your AWS account
+key_pair_name = "your-key-pair-name"
+
+# Application port
+app_port = 8080
+
+# URL to your Spring Boot JAR file
+# This could be a GitHub release, S3 bucket URL, or any publicly accessible URL
+app_jar_url = "https://github.com/your-username/spring-simpleschedulingsystem-api/releases/download/v1.0.0/app.jar" 
