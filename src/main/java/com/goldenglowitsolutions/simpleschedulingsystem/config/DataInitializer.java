@@ -4,10 +4,14 @@ import com.goldenglowitsolutions.simpleschedulingsystem.entity.Course;
 import com.goldenglowitsolutions.simpleschedulingsystem.entity.Student;
 import com.goldenglowitsolutions.simpleschedulingsystem.repository.CourseRepository;
 import com.goldenglowitsolutions.simpleschedulingsystem.repository.StudentRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,9 +21,15 @@ import java.util.Random;
  * Configuration class for initializing sample data.
  */
 @Configuration
-public class DataInitializer {
+@Component
+public class DataInitializer implements CommandLineRunner {
+
+    private static final Logger logger = LoggerFactory.getLogger(DataInitializer.class);
 
     private static final Random random = new Random();
+
+    @Value("${app.load-sample-data:true}")
+    private boolean loadSampleData;
 
     /**
      * Initializes sample data for the application.
@@ -33,6 +43,11 @@ public class DataInitializer {
     @Profile("!prod")
     public CommandLineRunner initData(StudentRepository studentRepository, CourseRepository courseRepository) {
         return args -> {
+            if (!loadSampleData) {
+                logger.info("Sample data loading is disabled");
+                return;
+            }
+
             // Create and save courses (30+ courses)
             List<Course> courses = createCourses();
             courseRepository.saveAll(courses);
@@ -200,5 +215,15 @@ public class DataInitializer {
             
             studentRepository.save(student);
         }
+    }
+
+    @Override
+    public void run(String... args) throws Exception {
+        if (!loadSampleData) {
+            logger.info("Sample data loading is disabled");
+            return;
+        }
+
+        // ... existing code ...
     }
 } 
