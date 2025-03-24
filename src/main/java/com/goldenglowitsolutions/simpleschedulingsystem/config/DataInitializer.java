@@ -223,7 +223,5 @@ public class DataInitializer implements CommandLineRunner {
             logger.info("Sample data loading is disabled");
             return;
         }
-
-        // ... existing code ...
     }
 } 
