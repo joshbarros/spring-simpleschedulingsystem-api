@@ -1,4 +1,5 @@
-FROM eclipse-temurin:17-jdk-alpine as build
+# Build stage
+FROM amazoncorretto:17-alpine as build
 WORKDIR /workspace/app
 
 # Copy gradle files
@@ -11,25 +12,24 @@ COPY settings.gradle .
 RUN chmod +x ./gradlew
 
 # Download dependencies
-RUN ./gradlew dependencies
+RUN ./gradlew dependencies --no-daemon
 
 # Copy source code
 COPY src src
 
-# Build the application
-RUN ./gradlew clean build -x test
-RUN mkdir -p build/dependency && (cd build/dependency; jar -xf ../libs/*.jar)
+# Build the application with bootJar task to ensure proper manifest
+RUN ./gradlew bootJar --no-daemon
 
-# Create a smaller runtime image
-FROM eclipse-temurin:17-jre-alpine
+# Runtime stage
+FROM amazoncorretto:17-alpine
+WORKDIR /app
 VOLUME /tmp
-ARG DEPENDENCY=/workspace/app/build/dependency
-COPY --from=build ${DEPENDENCY}/BOOT-INF/lib /app/lib
-COPY --from=build ${DEPENDENCY}/META-INF /app/META-INF
-COPY --from=build ${DEPENDENCY}/BOOT-INF/classes /app
 
-# Set the startup command
-ENTRYPOINT ["java","-cp","app:app/lib/*","com.goldenglowitsolutions.simpleschedulingsystem.Application"]
+# Copy the JAR file from the build stage
+COPY --from=build /workspace/app/build/libs/app.jar app.jar
+
+# Run the application with Spring Boot specific java commands
+ENTRYPOINT ["java", "-Djava.security.egd=file:/dev/./urandom", "-jar", "/app/app.jar"]
 
 # Expose port
 EXPOSE 8080
