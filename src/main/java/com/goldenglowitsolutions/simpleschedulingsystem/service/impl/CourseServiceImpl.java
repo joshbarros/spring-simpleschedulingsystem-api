@@ -11,7 +11,9 @@ import com.goldenglowitsolutions.simpleschedulingsystem.service.CourseService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -70,9 +72,23 @@ public class CourseServiceImpl implements CourseService {
     @Override
     @Transactional
     public void deleteCourse(String code) {
-        if (!courseRepository.existsById(code)) {
-            throw new EntityNotFoundException("Course not found with code: " + code);
+        Course course = courseRepository.findById(code)
+                .orElseThrow(() -> new EntityNotFoundException("Course not found with code: " + code));
+        
+        // Make a copy of students to avoid concurrent modification issues
+        Set<Student> students = new HashSet<>(course.getStudents());
+        
+        // Remove this course from all students to avoid foreign key constraint violation
+        for (Student student : students) {
+            student.getCourses().remove(course);
+            studentRepository.save(student);
         }
+        
+        // Clear the students collection on the course side
+        course.getStudents().clear();
+        courseRepository.save(course);
+        
+        // Now delete the course
         courseRepository.deleteById(code);
     }
 

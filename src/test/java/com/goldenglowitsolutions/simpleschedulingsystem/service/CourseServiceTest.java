@@ -147,13 +147,34 @@ class CourseServiceTest {
     void deleteCourse_WithValidCode_DeletesCourse() {
         // Arrange
         when(courseRepository.findById("CS101")).thenReturn(Optional.of(course1));
-        when(courseRepository.existsById("CS101")).thenReturn(true);
         doNothing().when(courseRepository).deleteById("CS101");
+        
+        // Empty student set for this test
+        course1.setStudents(new HashSet<>());
 
         // Act
         courseService.deleteCourse("CS101");
 
         // Assert
+        verify(courseRepository, times(1)).deleteById("CS101");
+    }
+
+    @Test
+    void deleteCourse_WithStudents_RemovesCoursesFromStudentsBeforeDeleting() {
+        // Arrange
+        Set<Student> students = new HashSet<>();
+        students.add(student1);
+        course1.setStudents(students);
+        
+        when(courseRepository.findById("CS101")).thenReturn(Optional.of(course1));
+        doNothing().when(courseRepository).deleteById("CS101");
+        when(studentRepository.save(any(Student.class))).thenReturn(student1);
+
+        // Act
+        courseService.deleteCourse("CS101");
+
+        // Assert
+        verify(studentRepository, times(1)).save(student1);
         verify(courseRepository, times(1)).deleteById("CS101");
     }
 
